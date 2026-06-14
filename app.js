@@ -187,20 +187,20 @@ function onResults(results) {
         }
     }
 }
-
-// --- 7. ตั้งค่าเปิดใช้งานโมเดล MediaPipe Hands ---
+// --- สั่งแก้ในไฟล์ app.js ตรงช่วงนี้ให้เป็นแบบนี้ครับ ---
 const hands = new Hands({
-    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    locateFile: (file) => {
+        // ให้วิ่งไปเอาไฟล์ย่อยของโมเดลตามชื่อไฟล์ (${file}) จาก Server CDN โดยตรง
+        return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+    }
 });
 
 hands.setOptions({
-    maxNumHands: 1,              // ตรวจจับแค่ 1 มือเพื่อประหยัดทรัพยากรและแม่นยำที่สุด
-    modelComplexity: 1,          // บาลานซ์ความเร็วและความแม่นยำให้เหมาะกับเว็บเบราว์เซอร์
-    minDetectionConfidence: 0.6, // ค่าความมั่นใจ 60% ในการเริ่มจับภาพมือ
-    minTrackingConfidence: 0.6   // ค่าความมั่นใจ 60% ในการติดตามการเคลื่อนไหวต่อเนื่อง
+    maxNumHands: 1,
+    modelComplexity: 1,
+    minDetectionConfidence: 0.6,
+    minTrackingConfidence: 0.6
 });
-hands.onResults(onResults);
-
 // --- 8. เริ่มต้นระบบกล้องเว็บแคม (เวอร์ชันยืดหยุ่น ป้องกันปัญหากล้องค้าง) ---
 const camera = new Camera(videoElement, {
     onFrame: async () => {
