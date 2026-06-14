@@ -34,7 +34,7 @@ const btnA = document.getElementById('btn_a');
 const btnB = document.getElementById('btn_b');
 
 const bgImage = new Image();
-bgImage.src = 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?q=80&w=800'; 
+bgImage.src = 'https://img1.pic.in.th/images/Copy-of-d921c48a7fa1fa9d.png'; 
 
 function speak(text) {
     if ('speechSynthesis' in window) {
