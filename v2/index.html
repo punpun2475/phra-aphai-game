@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เกมตอบคำถาม AI: พระอภัยมณีหนีนางผีเสื้อสมุทร</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+    <div class="game-container">
+        <div class="game-header">
+            <div id="life_display" class="hearts">❤️❤️❤️</div>
+            <div class="game-title">พระอภัยมณี หนีนางผีเสื้อสมุทร</div>
+            <div id="score_display" class="score">คะแนน: 0/10</div>
+        </div>
+
+        <div id="question_box" class="question-box">
+            <span id="question_text">ยินดีต้อนรับเข้าสู่เกมตอบคำถามวรรณคดีไทยด้วยระบบ AI!</span>
+        </div>
+
+        <div class="game-play-area">
+            
+            <div id="start_overlay" class="overlay">
+                <h2>พระอภัยมณีหนีนางผีเสื้อ</h2>
+                <p>เตรียมตัวยืนให้พร้อมหน้ากล้องกางนิ้วออก แล้วกดเริ่มเล่นได้เลยจ้า</p>
+                <button class="start-btn" onclick="startGame()">เริ่มเล่นเกม</button>
+            </div>
+
+            <div id="end_overlay" class="overlay hidden">
+                <h2 id="end_title">จบเกม!</h2>
+                <p id="end_status"></p>
+                <button class="restart-btn" onclick="resetGame()">เริ่มเล่นใหม่อีกครั้ง</button>
+            </div>
+
+            <video id="webcam" autoplay playsinline></video>
+            <canvas id="output_canvas"></canvas>
+
+            <div id="btn_a" style="display: none;"></div>
+            <div id="btn_b" style="display: none;"></div>
+        </div>
+
+        <div id="status_message" class="status-bar">
+            โปรดกดปุ่มสีทองด้านบนเพื่อเริ่มต้นระบบ AI ขยับนิ้วควบคุม
+        </div>
+    </div>
+
+</body>
+</html>
