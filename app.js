@@ -1,26 +1,26 @@
 // ==========================================
-// AI HAND TRACKING GAME: PHRA APHAI MANI
+// AI HAND TRACKING GAME: PHRA APHAI MANI (PRECISION CANVAS EDITION)
 // Developed by Senior Computer Vision Engineer
 // ==========================================
 
-// --- 1. คลังคำถามวรรณคดีไทย (10 ข้อตามป้ายโฆษณา) ---
+// --- 1. คลังคำถามวรรณคดีไทย (10 ข้อ) ---
 const quizData = [
-    { q: "นางผีเสื้อสมุทรลักตัวพระอภัยมณีมาจากถ้ำ?", a: "ข" }, // ผิด (ลักมาจากชายหาด)
-    { q: "สินสมุทรเป็นลูกของนางผีเสื้อสมุทรกับพระอภัยมณี?", a: "ก" }, // ถูก
-    { q: "พระอภัยมณีหนีนางผีเสื้อสมุทรไปที่เกาะแก้วพิสดาร?", a: "ก" }, // ถูก
-    { q: "ผู้ที่พาพระอภัยมณีหนีในช่วงแรกคือ ม้านิลมังกร?", a: "ข" }, // ผิด (เงือกผัวเมียและลูกเงือก)
-    { q: "โยคีแห่งเกาะแก้วพิสดารใช้ไม้เท้าเสกป้องกันนางผีเสื้อ?", a: "ก" }, // ถูก
-    { q: "นางผีเสื้อสมุทรกลัวเสียงปี่ของพระอภัยมณีจนขาดใจตายในตอนท้ายของการหนี?", a: "ก" }, // ถูก
-    { q: "สินสมุทรมีตาเป็นประกายเหมือนยักษ์ แต่มีรูปร่างเหมือนมนุษย์?", a: "ก" }, // ถูก
-    { q: "เกาะแก้วพิสดารมีสิ่งศักดิ์สิทธิ์ที่พวกยักษ์ไม่สามารถเข้ามาใกล้ได้?", a: "ก" }, // ถูก
-    { q: "นางเงือกตัวลูกยอมเสียสละพาสินสมุทรหนีจนตัวเองตาย?", a: "ข" }, // ผิด (นางเงือกรอดและได้เป็นชายา)
-    { q: "สุนทรภู่แต่งเรื่องพระอภัยมณีด้วยคำประพันธ์ประเภท 'โคลงสี่สุภาพ'?", a: "ข" } // ผิด (แต่งด้วยกลอนสุภาพ)
+    { q: "นางผีเสื้อสมุทรลักตัวพระอภัยมณีมาจากถ้ำ?", a: "ข" }, 
+    { q: "สินสมุทรเป็นลูกของนางผีเสื้อสมุทรกับพระอภัยมณี?", a: "ก" }, 
+    { q: "พระอภัยมณีหนีนางผีเสื้อสมุทรไปที่เกาะแก้วพิสดาร?", a: "ก" }, 
+    { q: "ผู้ที่พาพระอภัยมณีหนีในช่วงแรกคือ ม้านิลมังกร?", a: "ข" }, 
+    { q: "โยคีแห่งเกาะแก้วพิสดารใช้ไม้เท้าเสกป้องกันนางผีเสื้อ?", a: "ก" }, 
+    { q: "นางผีเสื้อสมุทรกลัวเสียงปี่ของพระอภัยมณีจนขาดใจตายในตอนท้ายของการหนี?", a: "ก" }, 
+    { q: "สินสมุทรมีตาเป็นประกายเหมือนยักษ์ แต่มีรูปร่างเหมือนมนุษย์?", a: "ก" }, 
+    { q: "เกาะแก้วพิสดารมีสิ่งศักดิ์สิทธิ์ที่พวกยักษ์ไม่สามารถเข้ามาใกล้ได้?", a: "ก" }, 
+    { q: "นางเงือกตัวลูกยอมเสียสละพาสินสมุทรหนีจนตัวเองตาย?", a: "ข" }, 
+    { q: "สุนทรภู่แต่งเรื่องพระอภัยมณีด้วยคำประพันธ์ประเภท 'โคลงสี่สุภาพ'?", a: "ข" } 
 ];
 
 let currentQuestionIndex = 0;
 let score = 0;
 let lives = 3;
-let canAnswer = true; // ดักไม่ให้ผู้เล่นตอบซ้ำรัวๆ ในเฟรมถัดไป (Cool-down state)
+let canAnswer = true; 
 
 // --- 2. อ้างอิง HTML Elements (DOM) ---
 const videoElement = document.getElementById('webcam');
@@ -32,20 +32,24 @@ const scoreDisplay = document.getElementById('score_display');
 const lifeDisplay = document.getElementById('life_display');
 const statusBar = document.getElementById('status_message');
 
-const btnA = document.getElementById('btn_a');
-const btnB = document.getElementById('btn_b');
+// ซ่อนปุ่ม HTML เดิมออกอัตโนมัติ เพื่อเปลี่ยนมาใช้วิธีวาดลงบน Canvas พิกัดจะได้ตรงกัน 100%
+if (document.getElementById('btn_a')) document.getElementById('btn_a').style.display = 'none';
+if (document.getElementById('btn_b')) document.getElementById('btn_b').style.display = 'none';
 
-// --- 3. ระบบเสียงสังเคราะห์ภาษาไทย (Text-to-Speech เวอร์ชันเสียงผู้หญิงสดใส) ---
+// กำหนดขอบเขตพิกัดและขนาดของปุ่มบนแผ่น Canvas โดยตรง (กว้าง 680, สูง 480)
+const btnA_Box = { x: 50, y: 200, width: 140, height: 90, hovered: false };
+const btnB_Box = { x: 490, y: 200, width: 140, height: 90, hovered: false };
+
+// --- 3. ระบบเสียงสังเคราะห์ภาษาไทย (Text-to-Speech เสียงผู้หญิงสดใส) ---
 function speak(text) {
     if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); // หยุดเสียงเก่าทันทีเพื่อไม่ให้เสียงพูดซ้อนกัน
+        window.speechSynthesis.cancel(); 
 
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'th-TH'; // กำหนดสำเนียงภาษาไทย
-        utterance.rate = 1.1;     // เร่งความเร็วเล็กน้อยให้ดูเป็นธรรมชาติ
-        utterance.pitch = 1.25;   // ดันโทนเสียงให้สูงขึ้นเพื่อเปลี่ยนคีย์เป็นผู้หญิงหวานๆ
+        utterance.lang = 'th-TH'; 
+        utterance.rate = 1.1;     
+        utterance.pitch = 1.25;   // ดันโทนเสียงให้สูงขึ้นเพื่อให้เป็นคีย์เสียงผู้หญิงสดใส
 
-        // ค้นหาไฟล์เสียงผู้หญิงไทยจากระบบปฏิบัติการ (Windows/Chrome)
         const voices = window.speechSynthesis.getVoices();
         const femaleVoice = voices.find(voice => 
             voice.lang === 'th-TH' && 
@@ -60,21 +64,20 @@ function speak(text) {
     }
 }
 
-// โหลดรายชื่อเสียงมารอไว้ล่วงหน้า (แก้บั๊กบางเบราว์เซอร์เสียงไม่ยอมโหลดตอนเปิดเว็บครั้งแรก)
 if ('speechSynthesis' in window) {
     window.speechSynthesis.onvoiceschanged = () => {
         window.speechSynthesis.getVoices();
     };
 }
 
-// --- 4. ฟังก์ชันควบคุมสถานะและการดำเนินเกม ---
+// --- 4. ฟังก์ชันควบคุมการเล่นเกม ---
 function loadQuestion() {
     if (currentQuestionIndex < quizData.length && lives > 0) {
         questionText.innerText = `ข้อที่ ${currentQuestionIndex + 1}: ${quizData[currentQuestionIndex].q}`;
-        statusBar.innerText = "เอื้อมฝ่ามือไปแตะปุ่ม สีเขียว (ก. ถูก) หรือ สีแดง (ข. ผิด)";
+        statusBar.innerText = "เอื้อมฝ่ามือไปแตะปุ่ม ก. ถูก (ฝั่งซ้าย) หรือ ข. ผิด (ฝั่งขวา)";
         statusBar.style.color = "#bcd1eb";
         speak(quizData[currentQuestionIndex].q);
-        canAnswer = true; // เปิดให้รับคำตอบในข้อใหม่
+        canAnswer = true; 
     } else {
         endGame();
     }
@@ -82,7 +85,7 @@ function loadQuestion() {
 
 function checkAnswer(userChoice) {
     if (!canAnswer) return; 
-    canAnswer = false; // ล็อคทันทีเพื่อป้องกันเฟรมถัดไปตรวจซ้ำ (Anti-spam)
+    canAnswer = false; 
 
     const correctAnswer = quizData[currentQuestionIndex].a;
 
@@ -94,14 +97,12 @@ function checkAnswer(userChoice) {
         speak("ถูกต้องแล้วจ้า เก่งมาก");
     } else {
         lives--;
-        // อัปเดตหัวใจสีแดงและหัวใจสีดำตามชีวิตที่เหลือ
         lifeDisplay.innerText = "❤️".repeat(lives) + "🖤".repeat(3 - lives);
         statusBar.innerText = "❌ ว้า... ข้อนี้ตอบผิดนะจ๊ะ";
         statusBar.style.color = "#ff3333";
         speak("ว้า ข้อนี้ตอบผิดนะจ๊ะ");
     }
 
-    // ดีเลย์ 3 วินาที เพื่อให้ผู้เล่นมีเวลาชักมือกลับมาตรงกลางจอก่อนเริ่มข้อถัดไป
     setTimeout(() => {
         currentQuestionIndex++;
         loadQuestion();
@@ -117,80 +118,112 @@ function endGame() {
         speak("ยินดีด้วยจ้า คุณพาพระอภัยมณีหนีรอดถึงเกาะแก้วพิสดารสำเร็จแล้ว");
     } else {
         questionText.innerText = `💀 Game Over! ถูกนางผีเสื้อสมุทรจับตัวไปซะแล้ว!`;
-        statusBar.innerText = `คะแนนของคุณคือ ${score} คะแนน ลองใหม่อีกครั้งนะ`;
+        statusBar.innerText = `พยายามใหม่อีกครั้งนะจ๊ะ`;
         statusBar.style.color = "#ff3333";
         speak("เกมโอเวอร์ ถูกนางผีเสื้อสมุทรจับตัวไปซะแล้ว พยายามใหม่อีกครั้งนะจ๊ะ");
     }
 }
 
-// --- 5. อัลกอริทึมคณิตศาสตร์ตรวจจับพิกัดชนปุ่ม (Collision Detection) ---
+// --- 5. ฟังก์ชันวาดปุ่ม ก. และ ข. ลงบนกระดาน Canvas โดยตรง ---
+function drawCanvasButtons() {
+    // 5.1 วาดปุ่ม ก. ถูก
+    canvasCtx.fillStyle = btnA_Box.hovered ? "rgba(255, 215, 0, 0.95)" : "rgba(40, 167, 69, 0.8)";
+    canvasCtx.strokeStyle = "#ffffff";
+    canvasCtx.lineWidth = 3;
+    roundRect(canvasCtx, btnA_Box.x, btnA_Box.y, btnA_Box.width, btnA_Box.height, 16, true, true);
+    
+    canvasCtx.fillStyle = btnA_Box.hovered ? "#050b14" : "#ffffff";
+    canvasCtx.font = "bold 24px 'Chakra Petch', sans-serif";
+    canvasCtx.fillText("ก. ถูก", btnA_Box.x + 35, btnA_Box.y + 53);
+
+    // 5.2 วาดปุ่ม ข. ผิด
+    canvasCtx.fillStyle = btnB_Box.hovered ? "rgba(255, 215, 0, 0.95)" : "rgba(220, 53, 69, 0.8)";
+    roundRect(canvasCtx, btnB_Box.x, btnB_Box.y, btnB_Box.width, btnB_Box.height, 16, true, true);
+    
+    canvasCtx.fillStyle = btnB_Box.hovered ? "#050b14" : "#ffffff";
+    canvasCtx.fillText("ข. ผิด", btnB_Box.x + 37, btnB_Box.y + 53);
+}
+
+// ฟังก์ชันเสริมช่วยสร้างรูปทรงสี่เหลี่ยมขอบมนบน Canvas
+function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    if (fill) ctx.fill();
+    if (stroke) ctx.stroke();
+}
+
+// --- 6. อัลกอริทึมคำนวณการชนปุ่มอิงพิกเซล Canvas แท้ 100% ---
 function checkCollision(handX, handY) {
-    // ดึงค่าขอบเขตพิกเซลจริงของปุ่ม ก. และ ปุ่ม ข. บนเบราว์เซอร์
-    const rectA = btnA.getBoundingClientRect();
-    const rectB = btnB.getBoundingClientRect();
-    const canvasRect = canvasElement.getBoundingClientRect();
-
-    // แปลงพิกัดมือที่ได้จาก Canvas ให้เป็นพิกัดสากลบนหน้าจอ (Absolute Viewport X, Y)
-    const absoluteHandX = canvasRect.left + handX;
-    const absoluteHandY = canvasRect.top + handY;
-
-    // ตรวจสอบกับปุ่ม ก. (ฝั่งซ้ายของจอ)
-    if (absoluteHandX >= rectA.left && absoluteHandX <= rectA.right &&
-        absoluteHandY >= rectA.top && absoluteHandY <= rectA.bottom) {
-        btnA.classList.add('hovered'); // สั่งให้ CSS แสดงเอฟเฟกต์ปุ่มขยาย/เรืองแสง
+    // เช็คปุ่ม ก. ฝั่งซ้าย
+    if (handX >= btnA_Box.x && handX <= btnA_Box.x + btnA_Box.width &&
+        handY >= btnA_Box.y && handY <= btnA_Box.y + btnA_Box.height) {
+        btnA_Box.hovered = true;
         if (canAnswer) checkAnswer('ก');
     } else {
-        btnA.classList.remove('hovered');
+        btnA_Box.hovered = false;
     }
 
-    // ตรวจสอบกับปุ่ม ข. (ฝั่งขวาของจอ)
-    if (absoluteHandX >= rectB.left && absoluteHandX <= rectB.right &&
-        absoluteHandY >= rectB.top && absoluteHandY <= rectB.bottom) {
-        btnB.classList.add('hovered'); // สั่งให้ CSS แสดงเอฟเฟกต์ปุ่มขยาย/เรืองแสง
+    // เช็คปุ่ม ข. ฝั่งขวา
+    if (handX >= btnB_Box.x && handX <= btnB_Box.x + btnB_Box.width &&
+        handY >= btnB_Box.y && handY <= btnB_Box.y + btnB_Box.height) {
+        btnB_Box.hovered = true;
         if (canAnswer) checkAnswer('ข');
     } else {
-        btnB.classList.remove('hovered');
+        btnB_Box.hovered = false;
     }
 }
 
-// --- 6. ฟังก์ชัน Callback เมื่อโมเดล AI ประมวลผลเสร็จสิ้น (Real-time Frame Handler) ---
+// --- 7. ฟังก์ชัน Callback ประมวลผลภาพ Real-time Frame Handler ---
 function onResults(results) {
-    // ปรับสัดส่วน Canvas ให้ยืดหยุ่นตามมิติภาพจริงของกล้องที่ส่งเข้ามา
-    canvasElement.width = videoElement.videoWidth;
-    canvasElement.height = videoElement.videoHeight;
+    // บังคับสัดส่วนพื้นที่ตรวจจับและวาดภาพให้คงที่ที่ขนาด 680x480 พิกเซล เสมอเพื่อกันพิกัดเบี้ยว
+    canvasElement.width = 680;
+    canvasElement.height = 480;
 
-    // ล้างภาพเฟรมเก่าทิ้งเพื่อเตรียมวาดเฟรมใหม่
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     
-    // วาดภาพวิดีโอสดจากกล้องลงไปบน Canvas เพื่อเป็นฉากหลังเกม
+    // วาดภาพวิดีโอสดจากกล้องลงบนกระดาน Canvas
+    canvasCtx.save();
     canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+    canvasCtx.restore();
 
-    // เช็คว่าในเฟรมปัจจุบันมีมือปรากฏอยู่หรือไม่
+    // วาดปุ่มคำตอบทับลงไปบนภาพสตรีมวิดีโอโดยตรง
+    drawCanvasButtons();
+
+    // หากโมเดล AI ตรวจเจอมือ
     if (results.multiHandLandmarks) {
         for (const landmarks of results.multiHandLandmarks) {
             
-            // เลือกจุดกึ่งกลางฝ่ามือ (Landmark หมายเลข 9: ข้อต่อโคนนิ้วกลาง) เป็นตัวชี้เป้า
+            // ดึงข้อต่อโคนนิ้วกลาง (Landmark หมายเลข 9) เป็นจุดชี้เป้า
             const targetPoint = landmarks[9];
             
-            // MATH HACK: พลิกพิกัด X ในโค้ดกลับด้าน (1 - x) เพื่อให้ตรงกับหน้าจอ CSS ที่เรา Mirror ไว้
+            // พลิกแกน X (1 - x) เพื่อแก้ปัญหา Mirror Effect ให้การควบคุมเป็นธรรมชาติ
             const flippedX = (1 - targetPoint.x) * canvasElement.width;
             const pixelY = targetPoint.y * canvasElement.height;
 
-            // วาดเส้นข้อต่อกระดูกมือ (สีทองตามธีมไทยโบราณ)
+            // วาดเส้นข้อต่อสีกนกทองคำโบราณ
             drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#dfb76c', lineWidth: 4});
             
-            // วาดจุดข้อต่อทั้ง 21 จุด (สีฟ้านีออนให้ตัดกับเส้น)
+            // วาดจุดข้อต่อทั้ง 21 จุดสีฟ้านีออนเรืองแสง
             drawLandmarks(canvasCtx, landmarks, {color: '#00fff0', lineWidth: 1, radius: 4});
 
-            // ส่งค่าพิกัดที่แปลงแล้วไปคำนวณการชนปุ่มทันที
+            // ตรวจจับระยะชนปุ่มทันที
             checkCollision(flippedX, pixelY);
         }
     }
 }
-// --- สั่งแก้ในไฟล์ app.js ตรงช่วงนี้ให้เป็นแบบนี้ครับ ---
+
+// --- 8. ตั้งค่าเริ่มต้นโมเดล MediaPipe Hands ---
 const hands = new Hands({
     locateFile: (file) => {
-        // ให้วิ่งไปเอาไฟล์ย่อยของโมเดลตามชื่อไฟล์ (${file}) จาก Server CDN โดยตรง
         return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
     }
 });
@@ -198,23 +231,22 @@ const hands = new Hands({
 hands.setOptions({
     maxNumHands: 1,
     modelComplexity: 1,
-    minDetectionConfidence: 0.6,
-    minTrackingConfidence: 0.6
+    minDetectionConfidence: 0.55, // ปรับลดค่าขั้นต่ำลงเล็กน้อยเพื่อให้ตรวจจับมือในสภาพแสงในห้องได้ง่ายขึ้น
+    minTrackingConfidence: 0.55
 });
-// --- 8. เริ่มต้นระบบกล้องเว็บแคม (เวอร์ชันยืดหยุ่น ป้องกันปัญหากล้องค้าง) ---
+hands.onResults(onResults);
+
+// --- 9. เปิดใช้งานกล้องเว็บแคม ---
 const camera = new Camera(videoElement, {
     onFrame: async () => {
         await hands.send({image: videoElement});
     }
 });
 
-// เริ่มต้นเรียกคำถามข้อแรกขึ้นมาเตรียมพร้อม
+// เริ่มต้นเรียกคำถามแรกและสตาร์ทกล้อง
 loadQuestion();
-
-// สั่งสตาร์ทกล้องเว็บแคม และทำ Error Handling เผื่อกรณีโดนแย่งกล้องหรือไม่ได้อนุญาตสิทธิ์
 camera.start().catch(err => {
-    console.error("เกิดข้อผิดพลาดในการเปิดระบบกล้อง: ", err);
-    statusBar.innerText = "🚨 เปิดกล้องไม่ได้! โปรดปิดโปรแกรมอื่นที่ใช้กล้องอยู่ (เช่น Zoom, LINE) แล้วกดอนุญาตสิทธิ์ให้เว็บเข้าถึงกล้อง";
+    console.error("ระบบกล้องขัดข้อง: ", err);
+    statusBar.innerText = "🚨 ไม่สามารถเปิดกล้องได้: โปรดตรวจสอบสิทธิ์การเข้าถึงกล้องบนเบราว์เซอร์";
     statusBar.style.color = "#ff3333";
-    statusBar.style.fontWeight = "bold";
 });
