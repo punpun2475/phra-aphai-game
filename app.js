@@ -1,5 +1,5 @@
 // ==========================================
-// AI HAND TRACKING GAME: PHRA APHAI MANI (CLEAN CAMERA EDITION)
+// AI HAND TRACKING GAME: PHRA APHAI MANI (MIRROR-FIXED EDITION)
 // Developed by Senior Computer Vision Engineer
 // ==========================================
 
@@ -36,9 +36,10 @@ const statusBar = document.getElementById('status_message');
 if (document.getElementById('btn_a')) document.getElementById('btn_a').style.display = 'none';
 if (document.getElementById('btn_b')) document.getElementById('btn_b').style.display = 'none';
 
-// พิกัดปุ่ม ก. และ ข. บนแผ่นกระจก Canvas 680x480
-const btnA_Box = { x: 50, y: 200, width: 140, height: 90, hovered: false };
-const btnB_Box = { x: 490, y: 200, width: 140, height: 90, hovered: false };
+// กำหนดตำแหน่งกล่องปุ่ม ก. และ ข. บนแผ่นกระจก Canvas 680x480
+// ล็อกให้ปุ่ม ก. อยู่ฝั่งขวา (ตามหน้าจอจริงของคุณ) และปุ่ม ข. อยู่ฝั่งซ้าย
+const btnA_Box = { x: 490, y: 220, width: 140, height: 90, hovered: false }; // ก. ถูก
+const btnB_Box = { x: 50, y: 220, width: 140, height: 90, hovered: false };  // ข. ผิด
 
 // --- 3. ระบบเสียงสังเคราะห์ครูผู้หญิง ---
 function speak(text) {
@@ -67,7 +68,7 @@ if ('speechSynthesis' in window) {
 function loadQuestion() {
     if (currentQuestionIndex < quizData.length && lives > 0) {
         questionText.innerText = `ข้อที่ ${currentQuestionIndex + 1}: ${quizData[currentQuestionIndex].q}`;
-        statusBar.innerText = "เอื้อมฝ่ามือไปแตะปุ่ม ก. ถูก (ฝั่งซ้าย) หรือ ข. ผิด (ฝั่งขวา)";
+        statusBar.innerText = "เอื้อมฝ่ามือไปแตะปุ่ม ก. ถูก (ขวา) หรือ ข. ผิด (ซ้าย)";
         statusBar.style.color = "#bcd1eb";
         speak(quizData[currentQuestionIndex].q);
         canAnswer = true; 
@@ -117,31 +118,24 @@ function endGame() {
     }
 }
 
-// --- 5. ฟังก์ชันวาดปุ่มลงบน Canvas แบบไม่กลับหัวข้อความ (Mirror-Safe Rendering) ---
+// --- 5. ฟังก์ชันวาดปุ่มลงบน Canvas แบบตัวหนังสืออ่านปกติ ไม่กลับด้าน ---
 function drawCanvasButtons() {
-    canvasCtx.save();
-    // ดันพิกัดข้อความให้พลิกแกนกระจกคืนเฉพาะตอนพิมพ์ตัวอักษร ตัวหนังสือจึงจะอ่านออกปกติ
-    canvasCtx.scale(-1, 1);
-
-    // 5.1 วาดปุ่ม ก. ถูก (เนื่องจากสั่งกลับด้านแกนสเกล ค่าพิกัด X จะต้องคิดกลับด้านขวา-ซ้าย)
+    // 5.1 วาดปุ่ม ก. ถูก (ฝั่งขวา)
     canvasCtx.fillStyle = btnA_Box.hovered ? "rgba(255, 215, 0, 0.95)" : "rgba(40, 167, 69, 0.85)";
     canvasCtx.strokeStyle = "#ffffff";
     canvasCtx.lineWidth = 3;
-    // พิกัดปุ่ม ก. บนระนาบกระจกสะท้อน
-    roundRect(canvasCtx, -(btnA_Box.x + btnA_Box.width), btnA_Box.y, btnA_Box.width, btnA_Box.height, 16, true, true);
+    roundRect(canvasCtx, btnA_Box.x, btnA_Box.y, btnA_Box.width, btnA_Box.height, 16, true, true);
     
     canvasCtx.fillStyle = btnA_Box.hovered ? "#050b14" : "#ffffff";
     canvasCtx.font = "bold 24px 'Chakra Petch', sans-serif";
-    canvasCtx.fillText("ก. ถูก", -(btnA_Box.x + btnA_Box.width) + 35, btnA_Box.y + 53);
+    canvasCtx.fillText("ก. ถูก", btnA_Box.x + 35, btnA_Box.y + 53);
 
-    // 5.2 วาดปุ่ม ข. ผิด
+    // 5.2 วาดปุ่ม ข. ผิด (ฝั่งซ้าย)
     canvasCtx.fillStyle = btnB_Box.hovered ? "rgba(255, 215, 0, 0.95)" : "rgba(220, 53, 69, 0.85)";
-    roundRect(canvasCtx, -(btnB_Box.x + btnB_Box.width), btnB_Box.y, btnB_Box.width, btnB_Box.height, 16, true, true);
+    roundRect(canvasCtx, btnB_Box.x, btnB_Box.y, btnB_Box.width, btnB_Box.height, 16, true, true);
     
     canvasCtx.fillStyle = btnB_Box.hovered ? "#050b14" : "#ffffff";
-    canvasCtx.fillText("ข. ผิด", -(btnB_Box.x + btnB_Box.width) + 37, btnB_Box.y + 53);
-
-    canvasCtx.restore();
+    canvasCtx.fillText("ข. ผิด", btnB_Box.x + 37, btnB_Box.y + 53);
 }
 
 function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
@@ -160,7 +154,7 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
     if (stroke) ctx.stroke();
 }
 
-// --- 6. คำนวณขอบเขตการชนปุ่มอิงตามระนาบกระจก 100% ---
+// --- 6. คำนวณขอบเขตการชนปุ่มอิงตามระนาบพิกเซลตรงตัว ---
 function checkCollision(handX, handY) {
     if (handX >= btnA_Box.x && handX <= btnA_Box.x + btnA_Box.width &&
         handY >= btnA_Box.y && handY <= btnA_Box.y + btnA_Box.height) {
@@ -179,22 +173,19 @@ function checkCollision(handX, handY) {
     }
 }
 
-// --- 7. ฟังก์ชันวาดสดภาพถ่าย (Clean Camera Render) ---
+// --- 7. ฟังก์ชันประมวลผลกล้องวิดีโอสด ---
 function onResults(results) {
     canvasElement.width = 680;
     canvasElement.height = 480;
 
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     
-    // วาดภาพสดจากกล้องเว็บแคมแบบไม่มีฟิลเตอร์โปร่งแสง ตัวเราชัดเจน ห้องชัดเจน 100%
+    // วาดภาพสดวิดีโอจากกล้องแบบปกติ
     canvasCtx.save();
-    // สั่งกระจกเงาให้กับ Canvas เพื่อให้ทิศทางการขยับมือเป็นธรรมชาติกับสายตาผู้เล่น
-    canvasCtx.translate(canvasElement.width, 0);
-    canvasCtx.scale(-1, 1);
     canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
     canvasCtx.restore();
 
-    // วาดปุ่มข้อความทับลงไปเหนือ Layer หน้ากล้อง
+    // วาดปุ่มข้อความทับลงไป
     drawCanvasButtons();
 
     // หากระบบตรวจเจอมือผู้เล่น
@@ -202,15 +193,15 @@ function onResults(results) {
         for (const landmarks of results.multiHandLandmarks) {
             const targetPoint = landmarks[9]; // โคนนิ้วกลาง
             
-            // นำพิกัด X ดั้งเดิม (เนื่องจากเราย้ายแปลงกระจกเงาที่แกนกล้องโดยตรงแล้ว)
-            const pixelX = targetPoint.x * canvasElement.width;
+            // [MATH FIX]: พลิกพิกัดตัวเลขในแนวแกน X คืนกลับมา เพื่อแก้ปัญหา "มือควบคุมสวนทางกัน"
+            const pixelX = (1 - targetPoint.x) * canvasElement.width;
             const pixelY = targetPoint.y * canvasElement.height;
 
-            // วาดโครงสร้างและจุดนิ้วมือสีฟ้านีออนให้เห็นเด่นชัดเหนือกายภาพจริง
+            // วาดโครงสร้างเส้นและจุดข้อต่อนิ้วมือ
             drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#dfb76c', lineWidth: 4});
             drawLandmarks(canvasCtx, landmarks, {color: '#00fff0', lineWidth: 1, radius: 4});
 
-            // ตรวจจับพิกัดชนปุ่ม
+            // ส่งพิกัดที่กลับทิศทางถูกต้องแล้วไปคำนวณการชนปุ่มคำตอบ
             checkCollision(pixelX, pixelY);
         }
     }
