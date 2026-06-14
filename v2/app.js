@@ -1,9 +1,9 @@
 // ==========================================
-// AI HAND TRACKING GAME: PHRA APHAI MANI (V2 FINAL MIRROR FIX)
+// AI HAND TRACKING GAME: PHRA APHAI MANI (V2 FULL PRODUCTION WITH BACKGROUND)
 // Developed by Senior Computer Vision Engineer
 // ==========================================
 
-// --- 1. คลังคำถามวรรณคดีไทย ---
+// --- 1. คลังคำถามวรรณคดีไทย (10 ข้อตามป้ายโฆษณา) ---
 const quizData = [
     { q: "นางผีเสื้อสมุทรลักตัวพระอภัยมณีมาจากถ้ำ?", a: "ข" }, 
     { q: "สินสมุทรเป็นลูกของนางผีเสื้อสมุทรกับพระอภัยมณี?", a: "ก" }, 
@@ -23,7 +23,11 @@ let lives = 3;
 let canAnswer = false; 
 let gameActive = false; 
 
-// --- 2. อ้างอิง HTML Elements ---
+// --- เพิ่มส่วนประกอบภาพพื้นหลังตามที่คุณครูต้องการ ---
+const bgImage = new Image();
+bgImage.src = 'https://img2.pic.in.th/Copy-of--2bfaf55ce07909280.png'; 
+
+// --- 2. อ้างอิง HTML Elements (DOM) ---
 const videoElement = document.getElementById('webcam');
 const canvasElement = document.getElementById('output_canvas');
 const canvasCtx = canvasElement.getContext('2d');
@@ -33,11 +37,11 @@ const scoreDisplay = document.getElementById('score_display');
 const lifeDisplay = document.getElementById('life_display');
 const statusBar = document.getElementById('status_message');
 
-// จัดล็อกตำแหน่งปุ่ม: ก. ถูก อยู่ฝั่งซ้ายของจอ (x: 50) และ ข. ผิด อยู่ฝั่งขวาของจอ (x: 490)
+// พิกัดล็อกปุ่มเสมือนจริง: ก. ถูก อยู่ฝั่งซ้ายของจอ และ ข. ผิด อยู่ฝั่งขวาของจอ (ขนาดเฟรม 680x480)
 const btnA_Box = { x: 50, y: 220, width: 140, height: 90, hovered: false };  // ก. ถูก (ซ้าย)
 const btnB_Box = { x: 490, y: 220, width: 140, height: 90, hovered: false }; // ข. ผิด (ขวา)
 
-// --- 3. ระบบเสียงสังเคราะห์ครูผู้หญิง ---
+// --- 3. ระบบเสียงสังเคราะห์ครูผู้หญิงสำเนียงไทย ---
 function speak(text) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel(); 
@@ -60,7 +64,7 @@ if ('speechSynthesis' in window) {
     window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
 }
 
-// --- 4. ฟังก์ชันจัดการเมนูเปลี่ยนฉากและสเตตัสเกม ---
+// --- 4. ฟังก์ชันจัดการเมนูเปลี่ยนฉากและเคลียร์สเตตัสเกม ---
 function startGame() {
     document.getElementById('start_overlay').classList.add('hidden');
     gameActive = true;
@@ -127,7 +131,29 @@ function checkAnswer(userChoice) {
     }, 3000);
 }
 
-// --- 5. ฟังก์ชันสร้างปุ่ม ก. และ ข. ลงบนแผ่นเฟรมจอ ---
+function endGame() {
+    gameActive = false; 
+    canAnswer = false;
+    const endOverlay = document.getElementById('end_overlay');
+    const endTitle = document.getElementById('end_title');
+    const endStatus = document.getElementById('end_status');
+    
+    endOverlay.classList.remove('hidden');
+    
+    if (lives > 0) {
+        endTitle.innerText = "🎉 ยินดีด้วย!";
+        endTitle.style.color = "#ffd700";
+        endStatus.innerText = `คุณพาพระอภัยมณีหนีรอดถึงเกาะแก้วพิสดารได้สำเร็จ! คะแนนทั้งหมดคือ ${score} คะแนน`;
+        speak("ยินดีด้วยจ้า คุณพาพระอภัยมณีหนีรอดสำเร็จแล้ว");
+    } else {
+        endTitle.innerText = "💀 Game Over!";
+        endTitle.style.color = "#ff3333";
+        endStatus.innerText = `โชคร้ายจัง ถูกนางผีเสื้อสมุทรจับตัวกลับไปซะแล้ว ทำคะแนนไปได้ ${score} คะแนน`;
+        speak("เกมโอเวอร์ ถูกนางผีเสื้อสมุทรจับตัวไปซะแล้ว พยายามใหม่อีกครั้งนะจ๊ะ");
+    }
+}
+
+// --- 5. ฟังก์ชันสร้างและดีไซน์ปุ่มข้อความ (วาดหลังสุดเพื่อให้ปุ่มทึบแสง คมชัดสูง) ---
 function drawCanvasButtons() {
     // 5.1 ดีไซน์กล่องปุ่ม ก. ถูก (ซ้ายจอ)
     canvasCtx.fillStyle = btnA_Box.hovered ? "rgba(255, 215, 0, 0.95)" : "rgba(40, 167, 69, 0.85)";
@@ -163,29 +189,7 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
     if (stroke) ctx.stroke();
 }
 
-function endGame() {
-    gameActive = false; 
-    canAnswer = false;
-    const endOverlay = document.getElementById('end_overlay');
-    const endTitle = document.getElementById('end_title');
-    const endStatus = document.getElementById('end_status');
-    
-    endOverlay.classList.remove('hidden');
-    
-    if (lives > 0) {
-        endTitle.innerText = "🎉 ยินดีด้วย!";
-        endTitle.style.color = "#ffd700";
-        endStatus.innerText = `คุณพาพระอภัยมณีหนีรอดถึงเกาะแก้วพิสดารได้สำเร็จ! คะแนนทั้งหมดคือ ${score} คะแนน`;
-        speak("ยินดีด้วยจ้า คุณพาพระอภัยมณีหนีรอดสำเร็จแล้ว");
-    } else {
-        endTitle.innerText = "💀 Game Over!";
-        endTitle.style.color = "#ff3333";
-        endStatus.innerText = `โชคร้ายจัง ถูกนางผีเสื้อสมุทรจับตัวกลับไปซะแล้ว ทำคะแนนไปได้ ${score} คะแนน`;
-        speak("เกมโอเวอร์ ถูกนางผีเสื้อสมุทรจับตัวไปซะแล้ว พยายามใหม่อีกครั้งนะจ๊ะ");
-    }
-}
-
-// --- 6. คำนวณขอบเขตการชนปุ่มบนระนาบพิกเซลกระจกเงาสัมบูรณ์ ---
+// --- 6. คำนวณขอบเขตการชนปุ่มระนาบพิกเซลตรงกันแบบกระจกเงาสมบูรณ์ ---
 function checkCollision(handX, handY) {
     if (handX >= btnA_Box.x && handX <= btnA_Box.x + btnA_Box.width &&
         handY >= btnA_Box.y && handY <= btnA_Box.y + btnA_Box.height) {
@@ -204,23 +208,31 @@ function checkCollision(handX, handY) {
     }
 }
 
-// --- 7. ลูปประมวลผลวิดีโอสดและการวาดพิกัดตามมิติกระจกเงาสมบูรณ์ ---
+// --- 7. ลูปประมวลผลวิดีโอสดและการซ้อนภาพ Layer พื้นหลังวรรณคดี ---
 function onResults(results) {
     canvasElement.width = 680;
     canvasElement.height = 480;
 
+    // 7.1 เคลียร์แผ่นเฟรมกระดานเก่า
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     
-    // 7.1 แปลงระบบพิกัดของ Canvas ทั้งผืนให้เป็นกระจกเงา (มีผลกับทั้งรูปกล้อง และ เส้นวาด AI สีฟ้า)
+    // 7.2 วาดภาพพื้นหลังของคุณครูเป็นฐานล่างสุด (Layer 1)
+    if (bgImage.complete) {
+        canvasCtx.drawImage(bgImage, 0, 0, canvasElement.width, canvasElement.height);
+    }
+
+    // 7.3 พลิกสเกลภาพกล้องเป็นกระจกเงา และวาดซ้อนทับแบบกึ่งโปร่งแสง (Layer 2)
     canvasCtx.save();
+    
+    // ตั้งค่าความใสของภาพกล้องเว็บแคม (0.65 แปลว่ากล้องชัด 65% มองทะลุเห็นพื้นหลังด้านหลัง 35%)
+    canvasCtx.globalAlpha = 0.65; 
+    
     canvasCtx.translate(canvasElement.width, 0);
     canvasCtx.scale(-1, 1);
-    
-    // วาดภาพสตรีมกล้องเว็บแคม
     canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
     if (gameActive) {
-        // วาดเส้นเชื่อมกระดูกและจุดข้อนิ้วสีฟ้านีออน (จะถูกพลิกตามกระจกเงาโดยอัตโนมัติ ทำให้ตรงกับมือจริงในกล้อง)
+        // วาดลายเส้นเชื่อมข้อต่อสีทองและจุดเรืองแสงฟ้านีออน (จะล็อกติดกับมือจริงของคุณครูทันที)
         if (results.multiHandLandmarks) {
             for (const landmarks of results.multiHandLandmarks) {
                 drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#dfb76c', lineWidth: 4});
@@ -228,28 +240,28 @@ function onResults(results) {
             }
         }
     }
-    canvasCtx.restore(); // คืนค่าระบบพิกัด Canvas กลับมาเป็นสากลเพื่อวาดปุ่มเมนูตั้งตรง
+    canvasCtx.restore(); // คืนค่าความทึบแสง (Alpha) และ Matrix ของ Canvas ให้กลับมาคมชัดเต็ม 100%
 
     if (gameActive) {
-        // 7.2 วาดปุ่ม ก. และ ข. ทับหน้าจอ (ก. อยู่ซ้ายหน้าจอ และ ข. อยู่ขวาหน้าจอแบบตัวหนังสืออ่านปกติ)
+        // 7.4 วาดปุ่มทับเหนือเลเยอร์หน้าจอทั้งหมด (ก. ซ้าย, ข. ขวา)
         drawCanvasButtons();
 
         if (results.multiHandLandmarks) {
             for (const landmarks of results.multiHandLandmarks) {
                 const targetPoint = landmarks[9]; // โคนนิ้วกลาง
                 
-                // คำนวณหาค่าพิกัดการจิ้มชนปุ่มบนระนาบพิกเซลกระจกเงาที่ถูกต้อง
+                // ถอดพิกัดสมการล็อกแกนควบคุมเข้าคู่กับภาพกระจกเงา
                 const mirrorX = (1 - targetPoint.x) * canvasElement.width;
                 const pixelY = targetPoint.y * canvasElement.height;
 
-                // ตรวจเช็คการชนปุ่ม
+                // ประมวลผลการแตะชนปุ่ม
                 checkCollision(mirrorX, pixelY);
             }
         }
     }
 }
 
-// --- 8. บูตระบบโมเดล AI และเชื่อมสัญญาณกล้อง ---
+// --- 8. บูตเครื่องโมเดลปัญญาประดิษฐ์ MediaPipe Hands ---
 const hands = new Hands({
     locateFile: (file) => {
         return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
@@ -271,6 +283,6 @@ const camera = new Camera(videoElement, {
 });
 
 camera.start().catch(err => {
-    console.error("กล้องไม่ตอบสนอง: ", err);
-    statusBar.innerText = "🚨 ระบบกล้องขัดข้อง: โปรดตรวจสอบสิทธิ์กล้องบนเบราว์เซอร์";
+    console.error("ระบบกล้องขัดข้อง: ", err);
+    statusBar.innerText = "🚨 ระบบกล้องขัดข้อง: โปรดตรวจสอบสิทธิ์การเข้าถึงกล้องเว็บแคมบนเบราว์เซอร์";
 });
