@@ -1,5 +1,5 @@
 // ==========================================
-// AI HAND TRACKING GAME: PHRA APHAI MANI (V2 PERFECT MIRROR MASTER)
+// AI HAND TRACKING GAME: PHRA APHAI MANI (V2 FINAL MIRROR FIX)
 // Developed by Senior Computer Vision Engineer
 // ==========================================
 
@@ -127,28 +127,6 @@ function checkAnswer(userChoice) {
     }, 3000);
 }
 
-function endGame() {
-    gameActive = false; 
-    canAnswer = false;
-    const endOverlay = document.getElementById('end_overlay');
-    const endTitle = document.getElementById('end_title');
-    const endStatus = document.getElementById('end_status');
-    
-    endOverlay.classList.remove('hidden');
-    
-    if (lives > 0) {
-        endTitle.innerText = "🎉 ยินดีด้วย!";
-        endTitle.style.color = "#ffd700";
-        endStatus.innerText = `คุณพาพระอภัยมณีหนีรอดถึงเกาะแก้วพิสดารได้สำเร็จ! คะแนนทั้งหมดคือ ${score} คะแนน`;
-        speak("ยินดีด้วยจ้า คุณพาพระอภัยมณีหนีรอดสำเร็จแล้ว");
-    } else {
-        endTitle.innerText = "💀 Game Over!";
-        endTitle.style.color = "#ff3333";
-        endStatus.innerText = `โชคร้ายจัง ถูกนางผีเสื้อสมุทรจับตัวกลับไปซะแล้ว ทำคะแนนไปได้ ${score} คะแนน`;
-        speak("เกมโอเวอร์ ถูกนางผีเสื้อสมุทรจับตัวไปซะแล้ว พยายามใหม่อีกครั้งนะจ๊ะ");
-    }
-}
-
 // --- 5. ฟังก์ชันสร้างปุ่ม ก. และ ข. ลงบนแผ่นเฟรมจอ ---
 function drawCanvasButtons() {
     // 5.1 ดีไซน์กล่องปุ่ม ก. ถูก (ซ้ายจอ)
@@ -185,6 +163,28 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
     if (stroke) ctx.stroke();
 }
 
+function endGame() {
+    gameActive = false; 
+    canAnswer = false;
+    const endOverlay = document.getElementById('end_overlay');
+    const endTitle = document.getElementById('end_title');
+    const endStatus = document.getElementById('end_status');
+    
+    endOverlay.classList.remove('hidden');
+    
+    if (lives > 0) {
+        endTitle.innerText = "🎉 ยินดีด้วย!";
+        endTitle.style.color = "#ffd700";
+        endStatus.innerText = `คุณพาพระอภัยมณีหนีรอดถึงเกาะแก้วพิสดารได้สำเร็จ! คะแนนทั้งหมดคือ ${score} คะแนน`;
+        speak("ยินดีด้วยจ้า คุณพาพระอภัยมณีหนีรอดสำเร็จแล้ว");
+    } else {
+        endTitle.innerText = "💀 Game Over!";
+        endTitle.style.color = "#ff3333";
+        endStatus.innerText = `โชคร้ายจัง ถูกนางผีเสื้อสมุทรจับตัวกลับไปซะแล้ว ทำคะแนนไปได้ ${score} คะแนน`;
+        speak("เกมโอเวอร์ ถูกนางผีเสื้อสมุทรจับตัวไปซะแล้ว พยายามใหม่อีกครั้งนะจ๊ะ");
+    }
+}
+
 // --- 6. คำนวณขอบเขตการชนปุ่มบนระนาบพิกเซลกระจกเงาสัมบูรณ์ ---
 function checkCollision(handX, handY) {
     if (handX >= btnA_Box.x && handX <= btnA_Box.x + btnA_Box.width &&
@@ -204,38 +204,45 @@ function checkCollision(handX, handY) {
     }
 }
 
-// --- 7. ลูปประมวลผลกล้องวิดีโอสดและการ Flip พิกัดสอดคล้องความจริง ---
+// --- 7. ลูปประมวลผลวิดีโอสดและการวาดพิกัดตามมิติกระจกเงาสมบูรณ์ ---
 function onResults(results) {
     canvasElement.width = 680;
     canvasElement.height = 480;
 
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     
-    // 7.1 วาดภาพสตรีมกล้องเว็บแคมแบบกลับด้านซ้ายขวาเพื่อให้เป็นกระจกเงาธรรมชาติ
+    // 7.1 แปลงระบบพิกัดของ Canvas ทั้งผืนให้เป็นกระจกเงา (มีผลกับทั้งรูปกล้อง และ เส้นวาด AI สีฟ้า)
     canvasCtx.save();
     canvasCtx.translate(canvasElement.width, 0);
     canvasCtx.scale(-1, 1);
+    
+    // วาดภาพสตรีมกล้องเว็บแคม
     canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
-    canvasCtx.restore();
 
     if (gameActive) {
-        // วาดปุ่มทับหน้ากล้องสด (ก. ถูก อยู่ด้านซ้ายหน้าจอ และ ข. ผิด อยู่ด้านขวาหน้าจอ)
+        // วาดเส้นเชื่อมกระดูกและจุดข้อนิ้วสีฟ้านีออน (จะถูกพลิกตามกระจกเงาโดยอัตโนมัติ ทำให้ตรงกับมือจริงในกล้อง)
+        if (results.multiHandLandmarks) {
+            for (const landmarks of results.multiHandLandmarks) {
+                drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#dfb76c', lineWidth: 4});
+                drawLandmarks(canvasCtx, landmarks, {color: '#00fff0', lineWidth: 1, radius: 4});
+            }
+        }
+    }
+    canvasCtx.restore(); // คืนค่าระบบพิกัด Canvas กลับมาเป็นสากลเพื่อวาดปุ่มเมนูตั้งตรง
+
+    if (gameActive) {
+        // 7.2 วาดปุ่ม ก. และ ข. ทับหน้าจอ (ก. อยู่ซ้ายหน้าจอ และ ข. อยู่ขวาหน้าจอแบบตัวหนังสืออ่านปกติ)
         drawCanvasButtons();
 
         if (results.multiHandLandmarks) {
             for (const landmarks of results.multiHandLandmarks) {
                 const targetPoint = landmarks[9]; // โคนนิ้วกลาง
                 
-                // [MATH ABSOLUTE MIRROR FIXED]: พลิกแกนพิกัด X คืนค่าให้เข้าสมการกระจกเงาพิกเซลโดยตรง
-                // เพื่อให้เส้นเชื่อมกระดูก และตำแหน่งตรวจจับจิ้มปุ่มขยับตามทิศทางมือจริงของคุณครู
+                // คำนวณหาค่าพิกัดการจิ้มชนปุ่มบนระนาบพิกเซลกระจกเงาที่ถูกต้อง
                 const mirrorX = (1 - targetPoint.x) * canvasElement.width;
                 const pixelY = targetPoint.y * canvasElement.height;
 
-                // วาดลายเส้นเชื่อมกระดูกข้อต่อสีทองและจุดเรืองแสงฟ้านีออน
-                drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#dfb76c', lineWidth: 4});
-                drawLandmarks(canvasCtx, landmarks, {color: '#00fff0', lineWidth: 1, radius: 4});
-
-                // ส่งค่าที่ Flip แมตช์กระจกเงาเรียบร้อยแล้วไปเช็คระยะชนปุ่ม
+                // ตรวจเช็คการชนปุ่ม
                 checkCollision(mirrorX, pixelY);
             }
         }
