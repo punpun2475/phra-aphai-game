@@ -1,0 +1,262 @@
+// ==========================================
+// AI HAND TRACKING GAME: PHRA APHAI MANI (CLEAN STATE EDITION)
+// Developed by Senior Computer Vision Engineer
+// ==========================================
+
+// --- 1. คลังคำถามวรรณคดีไทย ---
+const quizData = [
+    { q: "นางผีเสื้อสมุทรลักตัวพระอภัยมณีมาจากถ้ำ?", a: "ข" }, 
+    { q: "สินสมุทรเป็นลูกของนางผีเสื้อสมุทรกับพระอภัยมณี?", a: "ก" }, 
+    { q: "พระอภัยมณีหนีนางผีเสื้อสมุทรไปที่เกาะแก้วพิสดาร?", a: "ก" }, 
+    { q: "ผู้ที่พาพระอภัยมณีหนีในช่วงแรกคือ ม้านิลมังกร?", a: "ข" }, 
+    { q: "โยคีแห่งเกาะแก้วพิสดารใช้ไม้เท้าเสกป้องกันนางผีเสื้อ?", a: "ก" }, 
+    { q: "นางผีเสื้อสมุทรกลัวเสียงปี่ของพระอภัยมณีจนขาดใจตายในตอนท้ายของการหนี?", a: "ก" }, 
+    { q: "สินสมุทรมีตาเป็นประกายเหมือนยักษ์ แต่มีรูปร่างเหมือนมนุษย์?", a: "ก" }, 
+    { q: "เกาะแก้วพิสดารมีสิ่งศักดิ์สิทธิ์ที่พวกยักษ์ไม่สามารถเข้ามาใกล้ได้?", a: "ก" }, 
+    { q: "นางเงือกตัวลูกยอมเสียสละพาสินสมุทรหนีจนตัวเองตาย?", a: "ข" }, 
+    { q: "สุนทรภู่แต่งเรื่องพระอภัยมณีด้วยคำประพันธ์ประเภท 'โคลงสี่สุภาพ'?", a: "ข" } 
+];
+
+let currentQuestionIndex = 0;
+let score = 0;
+let lives = 3;
+let canAnswer = true; 
+let gameActive = false; // บล็อกระบบวาดปุ่มและประมวลผลกล้องจนกว่าจะคลิกเริ่มเกม
+
+// --- 2. อ้างอิง HTML Elements ---
+const videoElement = document.getElementById('webcam');
+const canvasElement = document.getElementById('output_canvas');
+const canvasCtx = canvasElement.getContext('2d');
+
+const questionText = document.getElementById('question_text');
+const scoreDisplay = document.getElementById('score_display');
+const lifeDisplay = document.getElementById('life_display');
+const statusBar = document.getElementById('status_message');
+
+// กำหนดพิกัดและขนาดกล่องปุ่ม ก. และ ข. บนระนาบแผ่นสแกน (กว้าง 680, สูง 480)
+const btnA_Box = { x: 50, y: 220, width: 140, height: 90, hovered: false };  // ก. ถูก (ซ้ายจอ)
+const btnB_Box = { x: 490, y: 220, width: 140, height: 90, hovered: false }; // ข. ผิด (ขวาจอ)
+
+// --- 3. ระบบเสียงสังเคราะห์ครูผู้หญิง ---
+function speak(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); 
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'th-TH'; 
+        utterance.rate = 1.1;     
+        utterance.pitch = 1.25;   
+
+        const voices = window.speechSynthesis.getVoices();
+        const femaleVoice = voices.find(voice => 
+            voice.lang === 'th-TH' && 
+            (voice.name.includes('Pattara') || voice.name.includes('Google') || voice.name.includes('Narisa'))
+        );
+        if (femaleVoice) utterance.voice = femaleVoice;
+        window.speechSynthesis.speak(utterance);
+    }
+}
+
+if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+}
+
+// --- 4. ฟังก์ชันสถานะเมนูระบบเริ่มเล่นเกมและล้างค่าเริ่มใหม่ (Game State Control) ---
+function startGame() {
+    document.getElementById('start_overlay').classList.add('hidden');
+    gameActive = true;
+    currentQuestionIndex = 0;
+    score = 0;
+    lives = 3;
+    scoreDisplay.innerText = `คะแนน: 0/10`;
+    lifeDisplay.innerText = "❤️❤️❤️";
+    loadQuestion();
+}
+
+function resetGame() {
+    document.getElementById('end_overlay').classList.add('hidden');
+    gameActive = true;
+    currentQuestionIndex = 0;
+    score = 0;
+    lives = 3;
+    scoreDisplay.innerText = `คะแนน: 0/10`;
+    lifeDisplay.innerText = "❤️❤️❤️";
+    loadQuestion();
+}
+
+function loadQuestion() {
+    if (currentQuestionIndex < quizData.length && lives > 0) {
+        questionText.innerText = `ข้อที่ ${currentQuestionIndex + 1}: ${quizData[currentQuestionIndex].q}`;
+        statusBar.innerText = "เอื้อมฝ่ามือไปแตะปุ่ม ก. ถูก (ฝั่งซ้าย) หรือ ข. ผิด (ฝั่งขวา)";
+        statusBar.style.color = "#bcd1eb";
+        speak(quizData[currentQuestionIndex].q);
+        canAnswer = true; 
+    } else {
+        endGame();
+    }
+}
+
+function checkAnswer(userChoice) {
+    if (!canAnswer) return; 
+    canAnswer = false; 
+
+    const correctAnswer = quizData[currentQuestionIndex].a;
+
+    if (userChoice === correctAnswer) {
+        score++;
+        scoreDisplay.innerText = `คะแนน: ${score}/10`;
+        statusBar.innerText = "✨ ถูกต้องแล้วจ้า! เก่งมาก ๆ";
+        statusBar.style.color = "#00ff66";
+        speak("ถูกต้องแล้วจ้า เก่งมาก");
+    } else {
+        lives--;
+        lifeDisplay.innerText = "❤️".repeat(lives) + "🖤".repeat(3 - lives);
+        statusBar.innerText = "❌ ว้า... ข้อนี้ตอบผิดนะจ๊ะ";
+        statusBar.style.color = "#ff3333";
+        speak("ว้า ข้อนี้ตอบผิดนะจ๊ะ");
+    }
+
+    setTimeout(() => {
+        currentQuestionIndex++;
+        loadQuestion();
+    }, 3000);
+}
+
+function endGame() {
+    gameActive = false; // สั่งหยุดประมวลผลวิดีโอกล้องเบื้องหลังทันที
+    const endOverlay = document.getElementById('end_overlay');
+    const endTitle = document.getElementById('end_title');
+    const endStatus = document.getElementById('end_status');
+    
+    endOverlay.classList.remove('hidden');
+    
+    if (lives > 0) {
+        endTitle.innerText = "🎉 ยินดีด้วย!";
+        endTitle.style.color = "#ffd700";
+        endStatus.innerText = `คุณพาพระอภัยมณีหนีรอดถึงเกาะแก้วพิสดารได้สำเร็จ! คะแนนทั้งหมดคือ ${score} คะแนน`;
+        speak("ยินดีด้วยจ้า คุณพาพระอภัยมณีหนีรอดสำเร็จแล้ว");
+    } else {
+        endTitle.innerText = "💀 Game Over!";
+        endTitle.style.color = "#ff3333";
+        endStatus.innerText = `โชคร้ายจัง ถูกนางผีเสื้อสมุทรจับตัวกลับไปซะแล้ว ทำคะแนนไปได้ ${score} คะแนน`;
+        speak("เกมโอเวอร์ ถูกนางผีเสื้อสมุทรจับตัวไปซะแล้ว พยายามใหม่อีกครั้งนะจ๊ะ");
+    }
+}
+
+// --- 5. ฟังก์ชันสร้างปุ่ม ก. และ ข. ลงบนเฟรมจอ (ไม่กลับด้านตัวอักษร) ---
+function drawCanvasButtons() {
+    // 5.1 ดีไซน์กล่องปุ่ม ก. ถูก (ซ้ายจอ)
+    canvasCtx.fillStyle = btnA_Box.hovered ? "rgba(255, 215, 0, 0.95)" : "rgba(40, 167, 69, 0.85)";
+    canvasCtx.strokeStyle = "#ffffff";
+    canvasCtx.lineWidth = 3;
+    roundRect(canvasCtx, btnA_Box.x, btnA_Box.y, btnA_Box.width, btnA_Box.height, 16, true, true);
+    
+    canvasCtx.fillStyle = btnA_Box.hovered ? "#050b14" : "#ffffff";
+    canvasCtx.font = "bold 24px 'Chakra Petch', sans-serif";
+    canvasCtx.fillText("ก. ถูก", btnA_Box.x + 35, btnA_Box.y + 53);
+
+    // 5.2 ดีไซน์กล่องปุ่ม ข. ผิด (ขวาจอ)
+    canvasCtx.fillStyle = btnB_Box.hovered ? "rgba(255, 215, 0, 0.95)" : "rgba(220, 53, 69, 0.85)";
+    roundRect(canvasCtx, btnB_Box.x, btnB_Box.y, btnB_Box.width, btnB_Box.height, 16, true, true);
+    
+    canvasCtx.fillStyle = btnB_Box.hovered ? "#050b14" : "#ffffff";
+    canvasCtx.fillText("ข. ผิด", btnB_Box.x + 37, btnB_Box.y + 53);
+}
+
+function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    if (fill) ctx.fill();
+    if (stroke) ctx.stroke();
+}
+
+// --- 6. ตรวจวัดระยะพิกเซลชนปุ่มอิงสัดส่วนกระจกเงาตรงกันสมบูรณ์ ---
+function checkCollision(handX, handY) {
+    if (handX >= btnA_Box.x && handX <= btnA_Box.x + btnA_Box.width &&
+        handY >= btnA_Box.y && handY <= btnA_Box.y + btnA_Box.height) {
+        btnA_Box.hovered = true;
+        if (canAnswer) checkAnswer('ก');
+    } else {
+        btnA_Box.hovered = false;
+    }
+
+    if (handX >= btnB_Box.x && handX <= btnB_Box.x + btnB_Box.width &&
+        handY >= btnB_Box.y && handY <= btnB_Box.y + btnB_Box.height) {
+        btnB_Box.hovered = true;
+        if (canAnswer) checkAnswer('ข');
+    } else {
+        btnB_Box.hovered = false;
+    }
+}
+
+// --- 7. ฟังก์ชันหลักในการวาดเฟรมและคำนวณทิศทางมือกลับด้านกระจกเงา ---
+function onResults(results) {
+    if (!gameActive) return; // บล็อกไม่ให้ทำงานถ้าระบบยังอยู่ในหน้าจอเมนูหลัก
+
+    canvasElement.width = 680;
+    canvasElement.height = 480;
+
+    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+    
+    // 7.1 พลิกภาพจากกล้องซ้าย-ขวาให้กลายเป็นกระจกเงาด้วย Canvas Matrix
+    canvasCtx.save();
+    canvasCtx.translate(canvasElement.width, 0);
+    canvasCtx.scale(-1, 1);
+    canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+    canvasCtx.restore();
+
+    // 7.2 วาดปุ่มกึ่งโปร่งใสทับหน้ากล้องสด (ก. อยู่ซ้ายมือของจอ, ข. อยู่ขวามือของจอ)
+    drawCanvasButtons();
+
+    // 7.3 ถอดสมการพิกัดตำแหน่งนิ้วมือและปรับทิศทางควบคุม
+    if (results.multiHandLandmarks) {
+        for (const landmarks of results.multiHandLandmarks) {
+            const targetPoint = landmarks[9]; // โคนนิ้วกลางเป็นจุดจิ้มปุ่ม
+            
+            // [MATH ALGORITHM FIXED]: นำพิกัดดิบแนวแกน X มาสลับฝั่ง (1 - X) เพื่อให้เส้นขยับและพิกัดชนปุ่มตรงกับภาพส่องกระจกเงา
+            const pixelX = (1 - targetPoint.x) * canvasElement.width;
+            const pixelY = targetPoint.y * canvasElement.height;
+
+            // วาดจุดข้อนิ้วและเส้นโครงสร้างสีกนกทองให้ตรงตำแหน่งมือจริงในจอ
+            drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#dfb76c', lineWidth: 4});
+            drawLandmarks(canvasCtx, landmarks, {color: '#00fff0', lineWidth: 1, radius: 4});
+
+            // ตรวจจับพิกัดสัมผัสปุ่ม
+            checkCollision(pixelX, pixelY);
+        }
+    }
+}
+
+// --- 8. เริ่มต้นโมเดลปัญญาประดิษฐ์จากไลบรารีสากล ---
+const hands = new Hands({
+    locateFile: (file) => {
+        return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+    }
+});
+
+hands.setOptions({
+    maxNumHands: 1,
+    modelComplexity: 1,
+    minDetectionConfidence: 0.55, 
+    minTrackingConfidence: 0.55
+});
+hands.onResults(onResults);
+
+const camera = new Camera(videoElement, {
+    onFrame: async () => {
+        await hands.send({image: videoElement});
+    }
+});
+
+// บูตสตาร์ทเปิดใช้งานกล้องวิดีโอแสตนด์บายไว้ในระบบ
+camera.start().catch(err => {
+    statusBar.innerText = "🚨 ระบบกล้องขัดข้อง: โปรดกดอนุญาตสิทธิ์และปิดแอปพลิเคชันอื่นที่ใช้กล้องอยู่";
+});
