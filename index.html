@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>พระอภัยมณี หนีนางผีเสื้อสมุทร - Motion Capture Quiz</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+    <div class="game-container">
+        <div class="game-header">
+            <div class="hearts" id="life_display">❤️❤️❤️</div>
+            <div class="game-title">พระอภัยมณี หนีนางผีเสื้อสมุทร</div>
+            <div class="score" id="score_display">คะแนน: 0/10</div>
+        </div>
+
+        <div class="question-box" id="question_text">กำลังโหลดคำถาม...</div>
+
+        <div class="game-play-area">
+            <video id="webcam" autoplay playsinline muted></video>
+            <canvas id="output_canvas"></canvas>
+
+            <div class="hitbox btn-choice-a" id="btn_a">ก. ถูก</div>
+            <div class="hitbox btn-choice-b" id="btn_b">ข. ผิด</div>
+        </div>
+
+        <div class="status-bar" id="status_message">ยืนกางแขนหน้ากล้อง แล้วเอื้อมมือไปแตะคำตอบ!</div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
