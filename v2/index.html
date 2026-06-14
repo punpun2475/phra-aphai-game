@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เกมตอบคำถาม AI: พระอภัยมณีหนีนางผีเสื้อสมุทร</title>
+    <title>เกมตอบคำถาม AI: พระอภัยมณีหนีนางผีเสื้อสมุทร v2</title>
     <link rel="stylesheet" href="style.css">
     
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -15,7 +15,7 @@
     <div class="game-container">
         <div class="game-header">
             <div id="life_display" class="hearts">❤️❤️❤️</div>
-            <div class="game-title">พระอภัยมณี หนีนางผีเสื้อสมุทร</div>
+            <div class="game-title">พระอภัยมณี หนีนางผีเสื้อสมุทร (V2)</div>
             <div id="score_display" class="score">คะแนน: 0/10</div>
         </div>
 
@@ -37,7 +37,7 @@
                 <button class="restart-btn" onclick="resetGame()">เริ่มเล่นใหม่อีกครั้ง</button>
             </div>
 
-            <video id="webcam" autoplay playsinline></video>
+            <video id="webcam" style="display: none;" autoplay playsinline></video>
             <canvas id="output_canvas"></canvas>
 
             <div id="btn_a" style="display: none;"></div>
@@ -45,9 +45,10 @@
         </div>
 
         <div id="status_message" class="status-bar">
-            โปรดกดปุ่มสีทองด้านบนเพื่อเริ่มต้นระบบ AI ขยับนิ้วควบคุม
+            โปรดกดปุ่มเริ่มเล่นเกมสีทองด้านบน เพื่อเปิดการทำงานของระบบสแกน AI
         </div>
     </div>
 
+    <script src="app.js"></script>
 </body>
 </html>
