@@ -36,7 +36,7 @@ const statusBar = document.getElementById('status_message');
 if (document.getElementById('btn_a')) document.getElementById('btn_a').style.display = 'none';
 if (document.getElementById('btn_b')) document.getElementById('btn_b').style.display = 'none';
 
-// [SETTING FIXED]: ล็อกตำแหน่งปุ่ม ก. ถูก ไว้ฝั่งซ้าย (x: 50) และปุ่ม ข. ผิด ไว้ฝั่งขวา (x: 490) ของหน้าจอ
+// [SETTING]: จัดวางปุ่มให้ ก. อยู่ฝั่งซ้ายของจอ และ ข. อยู่ฝั่งขวาของจอตามที่คุณต้องการ
 const btnA_Box = { x: 50, y: 220, width: 140, height: 90, hovered: false };  // ก. ถูก (ซ้าย)
 const btnB_Box = { x: 490, y: 220, width: 140, height: 90, hovered: false }; // ข. ผิด (ขวา)
 
@@ -67,7 +67,7 @@ if ('speechSynthesis' in window) {
 function loadQuestion() {
     if (currentQuestionIndex < quizData.length && lives > 0) {
         questionText.innerText = `ข้อที่ ${currentQuestionIndex + 1}: ${quizData[currentQuestionIndex].q}`;
-        statusBar.innerText = "เอื้อมฝ่ามือไปแตะปุ่ม ก. ถูก (ฝั่งซ้าย) หรือ ข. ผิด (ฝั่งขวา)";
+        statusBar.innerText = "เอื้อมฝ่ามือไปแตะปุ่ม ก. ถูก (ซ้าย) หรือ ข. ผิด (ขวา)";
         statusBar.style.color = "#bcd1eb";
         speak(quizData[currentQuestionIndex].q);
         canAnswer = true; 
@@ -93,7 +93,7 @@ function checkAnswer(userChoice) {
         lifeDisplay.innerText = "❤️".repeat(lives) + "🖤".repeat(3 - lives);
         statusBar.innerText = "❌ ว้า... ข้อนี้ตอบผิดนะจ๊ะ";
         statusBar.style.color = "#ff3333";
-        speak("ว้า ข้อนี้ตอบผิดนะจ๊ะ");
+        speak("จ้า ข้อนี้ตอบผิดนะจ๊ะ");
     }
 
     setTimeout(() => {
@@ -119,7 +119,7 @@ function endGame() {
 
 // --- 5. ฟังก์ชันวาดปุ่มลงบน Canvas โดยตรง ---
 function drawCanvasButtons() {
-    // 5.1 วาดปุ่ม ก. ถูก (แสดงผลทางฝั่งซ้ายของหน้าจอปกติ)
+    // 5.1 วาดปุ่ม ก. ถูก (ฝั่งซ้ายของจอ)
     canvasCtx.fillStyle = btnA_Box.hovered ? "rgba(255, 215, 0, 0.95)" : "rgba(40, 167, 69, 0.85)";
     canvasCtx.strokeStyle = "#ffffff";
     canvasCtx.lineWidth = 3;
@@ -129,7 +129,7 @@ function drawCanvasButtons() {
     canvasCtx.font = "bold 24px 'Chakra Petch', sans-serif";
     canvasCtx.fillText("ก. ถูก", btnA_Box.x + 35, btnA_Box.y + 53);
 
-    // 5.2 วาดปุ่ม ข. ผิด (แสดงผลทางฝั่งขวาของหน้าจอปกติ)
+    // 5.2 วาดปุ่ม ข. ผิด (ฝั่งขวาของจอ)
     canvasCtx.fillStyle = btnB_Box.hovered ? "rgba(255, 215, 0, 0.95)" : "rgba(220, 53, 69, 0.85)";
     roundRect(canvasCtx, btnB_Box.x, btnB_Box.y, btnB_Box.width, btnB_Box.height, 16, true, true);
     
@@ -153,7 +153,7 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
     if (stroke) ctx.stroke();
 }
 
-// --- 6. คำนวณขอบเขตการชนปุ่มอิงตามระบบพิกเซลกระจกเงา ---
+// --- 6. คำนวณขอบเขตการชนปุ่มอิงตามระบบกระจกเงา ---
 function checkCollision(handX, handY) {
     if (handX >= btnA_Box.x && handX <= btnA_Box.x + btnA_Box.width &&
         handY >= btnA_Box.y && handY <= btnA_Box.y + btnA_Box.height) {
@@ -172,43 +172,43 @@ function checkCollision(handX, handY) {
     }
 }
 
-// --- 7. ฟังก์ชันหลักประมวลผลกล้องวิดีโอสดและการสลับทิศทางนิ้วมือ ---
+// --- 7. ฟังก์ชันประมวลผลวิดีโอ (กลับด้านกระจกเงาทั้งภาพและตัวเลขควบคุม) ---
 function onResults(results) {
     canvasElement.width = 680;
     canvasElement.height = 480;
 
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     
-    // 7.1 วาดภาพวิดีโอจากกล้องเว็บแคมแบบกลับด้านซ้ายขวา (Mirror Effect หน้าไม่เบลอ)
+    // วาดภาพสดจากวิดีโอแบบส่องกระจกเงา (Mirror Effect ทำให้คนเล่นไม่งงขวา-ซ้าย)
     canvasCtx.save();
     canvasCtx.translate(canvasElement.width, 0);
     canvasCtx.scale(-1, 1);
     canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
     canvasCtx.restore();
 
-    // 7.2 วาดปุ่มทับลงไปบนหน้ากล้อง (ก. ถูก อยู่ด้านซ้ายหน้าจอ และ ข. ผิด อยู่ด้านขวาหน้าจอ)
+    // วาดปุ่มทับหน้ากล้อง (ก. ถูก อยู่ด้านซ้ายหน้าจอ และ ข. ผิด อยู่ด้านขวาหน้าจอ)
     drawCanvasButtons();
 
-    // 7.3 ถอดรหัสพิกัดมือและแก้ปัญหามือควบคุมสวนทาง
+    // เมื่อ AI ตรวจจับฝ่ามือเจอในระบบ
     if (results.multiHandLandmarks) {
         for (const landmarks of results.multiHandLandmarks) {
-            const targetPoint = landmarks[9]; // ดึงโคนนิ้วกลางเป็นพิกัดอ้างอิง
+            const targetPoint = landmarks[9]; // ข้อต่อโคนนิ้วกลาง
             
-            // [MATH PERFECT FIX]: ใช้สูตร (1 - X) พลิกค่าพิกัดความจริงของ AI ให้แมตช์เข้าคู่กับภาพกระจกเงาในข้อ 7.1
-            const mirrorX = (1 - targetPoint.x) * canvasElement.width;
+            // [COMPUTATION FIX]: สั่งคว่ำสลับแกน X ของค่าดิบจากโมเดล เพื่อให้ตำแหน่งนิ้วบนจอกับค่าพิกัดชนปุ่มตรงกันในโหมดกระจกเงา
+            const pixelX = (1 - targetPoint.x) * canvasElement.width;
             const pixelY = targetPoint.y * canvasElement.height;
 
-            // สั่งวาดเส้นข้อต่อสีกนกทองและจุดข้อนิ้วสีฟ้านีออนให้ตรงกับทิศทางมือจริงในจอ
+            // วาดโครงกระดูกนิ้วมือสีทอง และจุดข้อนิ้วสีฟ้านีออนให้ตรงกับตำแหน่งมือในจอ
             drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#dfb76c', lineWidth: 4});
             drawLandmarks(canvasCtx, landmarks, {color: '#00fff0', lineWidth: 1, radius: 4});
 
-            // ตรวจจับระยะชนปุ่มที่สัมพันธ์กับมือจริง
-            checkCollision(mirrorX, pixelY);
+            // ตรวจสอบการชนปุ่มทันที
+            checkCollision(pixelX, pixelY);
         }
     }
 }
 
-// --- 8. ติดตั้งโมเดลและเปิดระบบกล้อง ---
+// --- 8. ติดตั้งโมเดลปัญญาประดิษฐ์ MediaPipe ---
 const hands = new Hands({
     locateFile: (file) => {
         return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
