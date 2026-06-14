@@ -25,7 +25,7 @@ let gameActive = false;
 
 // --- เพิ่มส่วนประกอบภาพพื้นหลังตามที่คุณครูต้องการ ---
 const bgImage = new Image();
-bgImage.src = 'https://img2.pic.in.th/Copy-of--2bfaf55ce07909280.png'; 
+bgImage.src = 'https://img1.pic.in.th/images/Copy-of--1.png'; 
 
 // --- 2. อ้างอิง HTML Elements (DOM) ---
 const videoElement = document.getElementById('webcam');
