@@ -1,28 +1,26 @@
 // ==========================================
-// AI HAND TRACKING GAME: PHRA APHAI MANI (PERFECT MIRROR SYSTEM)
+// AI HAND TRACKING GAME: PHRA APHAI MANI (MAX GRAPHICS)
 // Developed by Senior Computer Vision Engineer
 // ==========================================
 
-// --- 1. คลังคำถามวรรณคดีไทย ---
 const quizData = [
-    { q: "นางผีเสื้อสมุทรลักตัวพระอภัยมณีมาจากถ้ำ?", a: "ข" }, 
-    { q: "สินสมุทรเป็นลูกของนางผีเสื้อสมุทรกับพระอภัยมณี?", a: "ก" }, 
-    { q: "พระอภัยมณีหนีนางผีเสื้อสมุทรไปที่เกาะแก้วพิสดาร?", a: "ก" }, 
-    { q: "ผู้ที่พาพระอภัยมณีหนีในช่วงแรกคือ ม้านิลมังกร?", a: "ข" }, 
-    { q: "โยคีแห่งเกาะแก้วพิสดารใช้ไม้เท้าเสกป้องกันนางผีเสื้อ?", a: "ก" }, 
-    { q: "นางผีเสื้อสมุทรกลัวเสียงปี่ของพระอภัยมณีจนขาดใจตายในตอนท้ายของการหนี?", a: "ก" }, 
-    { q: "สินสมุทรมีตาเป็นประกายเหมือนยักษ์ แต่มีรูปร่างเหมือนมนุษย์?", a: "ก" }, 
-    { q: "เกาะแก้วพิสดารมีสิ่งศักดิ์สิทธิ์ที่พวกยักษ์ไม่สามารถเข้ามาใกล้ได้?", a: "ก" }, 
-    { q: "นางเงือกตัวลูกยอมเสียสละพาสินสมุทรหนีจนตัวเองตาย?", a: "ข" }, 
-    { q: "สุนทรภู่แต่งเรื่องพระอภัยมณีด้วยคำประพันธ์ประเภท 'โคลงสี่สุภาพ'?", a: "ข" } 
+    { q: "นางผีเสื้อสมุทรลักตัวพระอภัยมณีมาจากถ้ำ?", a: "ข" },
+    { q: "สินสมุทรเป็นลูกของนางผีเสื้อสมุทรกับพระอภัยมณี?", a: "ก" },
+    { q: "พระอภัยมณีหนีนางผีเสื้อสมุทรไปที่เกาะแก้วพิสดาร?", a: "ก" },
+    { q: "ผู้ที่พาพระอภัยมณีหนีในช่วงแรกคือ ม้านิลมังกร?", a: "ข" },
+    { q: "โยคีแห่งเกาะแก้วพิสดารใช้ไม้เท้าเสกป้องกันนางผีเสื้อ?", a: "ก" },
+    { q: "นางผีเสื้อสมุทรกลัวเสียงปี่ของพระอภัยมณีจนขาดใจตายในตอนท้ายของการหนี?", a: "ก" },
+    { q: "สินสมุทรมีตาเป็นประกายเหมือนยักษ์ แต่มีรูปร่างเหมือนมนุษย์?", a: "ก" },
+    { q: "เกาะแก้วพิสดารมีสิ่งศักดิ์สิทธิ์ที่พวกยักษ์ไม่สามารถเข้ามาใกล้ได้?", a: "ก" },
+    { q: "นางเงือกตัวลูกยอมเสียสละพาสินสมุทรหนีจนตัวเองตาย?", a: "ข" },
+    { q: "สุนทรภู่แต่งเรื่องพระอภัยมณีด้วยคำประพันธ์ประเภท 'โคลงสี่สุภาพ'?", a: "ข" }
 ];
 
 let currentQuestionIndex = 0;
 let score = 0;
 let lives = 3;
-let canAnswer = true; 
+let canAnswer = true;
 
-// --- 2. อ้างอิง HTML Elements ---
 const videoElement = document.getElementById('webcam');
 const canvasElement = document.getElementById('output_canvas');
 const canvasCtx = canvasElement.getContext('2d');
@@ -32,20 +30,17 @@ const scoreDisplay = document.getElementById('score_display');
 const lifeDisplay = document.getElementById('life_display');
 const statusBar = document.getElementById('status_message');
 
-// ซ่อนปุ่ม HTML ภายนอกระบบเพื่อไม่ให้ซ้อนทับ
-if (document.getElementById('btn_a')) document.getElementById('btn_a').style.display = 'none';
-if (document.getElementById('btn_b')) document.getElementById('btn_b').style.display = 'none';
+const btnA = document.getElementById('btn_a');
+const btnB = document.getElementById('btn_b');
 
-// [SETTING]: จัดวางปุ่มให้ ก. อยู่ฝั่งซ้ายของจอ และ ข. อยู่ฝั่งขวาของจอตามที่คุณต้องการ
-const btnA_Box = { x: 50, y: 220, width: 140, height: 90, hovered: false };  // ก. ถูก (ซ้าย)
-const btnB_Box = { x: 490, y: 220, width: 140, height: 90, hovered: false }; // ข. ผิด (ขวา)
+const bgImage = new Image();
+bgImage.src = 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?q=80&w=800'; 
 
-// --- 3. ระบบเสียงสังเคราะห์ครูผู้หญิง ---
 function speak(text) {
     if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); 
+        window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'th-TH'; 
+        utterance.lang = 'th-TH';
         utterance.rate = 1.1;     
         utterance.pitch = 1.25;   
 
@@ -54,6 +49,7 @@ function speak(text) {
             voice.lang === 'th-TH' && 
             (voice.name.includes('Pattara') || voice.name.includes('Google') || voice.name.includes('Narisa'))
         );
+
         if (femaleVoice) utterance.voice = femaleVoice;
         window.speechSynthesis.speak(utterance);
     }
@@ -63,14 +59,13 @@ if ('speechSynthesis' in window) {
     window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
 }
 
-// --- 4. ฟังก์ชันดำเนินเกม ---
 function loadQuestion() {
     if (currentQuestionIndex < quizData.length && lives > 0) {
         questionText.innerText = `ข้อที่ ${currentQuestionIndex + 1}: ${quizData[currentQuestionIndex].q}`;
-        statusBar.innerText = "เอื้อมฝ่ามือไปแตะปุ่ม ก. ถูก (ซ้าย) หรือ ข. ผิด (ขวา)";
+        statusBar.innerText = "เอื้อมฝ่ามือไปแตะปุ่ม สีเขียว (ก. ถูก) หรือ สีแดง (ข. ผิด)";
         statusBar.style.color = "#bcd1eb";
         speak(quizData[currentQuestionIndex].q);
-        canAnswer = true; 
+        canAnswer = true;
     } else {
         endGame();
     }
@@ -93,7 +88,7 @@ function checkAnswer(userChoice) {
         lifeDisplay.innerText = "❤️".repeat(lives) + "🖤".repeat(3 - lives);
         statusBar.innerText = "❌ ว้า... ข้อนี้ตอบผิดนะจ๊ะ";
         statusBar.style.color = "#ff3333";
-        speak("จ้า ข้อนี้ตอบผิดนะจ๊ะ");
+        speak("ว้า ข้อนี้ตอบผิดนะจ๊ะ");
     }
 
     setTimeout(() => {
@@ -111,114 +106,82 @@ function endGame() {
         speak("ยินดีด้วยจ้า คุณพาพระอภัยมณีหนีรอดถึงเกาะแก้วพิสดารสำเร็จแล้ว");
     } else {
         questionText.innerText = `💀 Game Over! ถูกนางผีเสื้อสมุทรจับตัวไปซะแล้ว!`;
-        statusBar.innerText = `พยายามใหม่อีกครั้งนะจ๊ะ`;
+        statusBar.innerText = `คะแนนของคุณคือ ${score} คะแนน ลองใหม่อีกครั้งนะ`;
         statusBar.style.color = "#ff3333";
         speak("เกมโอเวอร์ ถูกนางผีเสื้อสมุทรจับตัวไปซะแล้ว พยายามใหม่อีกครั้งนะจ๊ะ");
     }
 }
 
-// --- 5. ฟังก์ชันวาดปุ่มลงบน Canvas โดยตรง ---
-function drawCanvasButtons() {
-    // 5.1 วาดปุ่ม ก. ถูก (ฝั่งซ้ายของจอ)
-    canvasCtx.fillStyle = btnA_Box.hovered ? "rgba(255, 215, 0, 0.95)" : "rgba(40, 167, 69, 0.85)";
-    canvasCtx.strokeStyle = "#ffffff";
-    canvasCtx.lineWidth = 3;
-    roundRect(canvasCtx, btnA_Box.x, btnA_Box.y, btnA_Box.width, btnA_Box.height, 16, true, true);
-    
-    canvasCtx.fillStyle = btnA_Box.hovered ? "#050b14" : "#ffffff";
-    canvasCtx.font = "bold 24px 'Chakra Petch', sans-serif";
-    canvasCtx.fillText("ก. ถูก", btnA_Box.x + 35, btnA_Box.y + 53);
-
-    // 5.2 วาดปุ่ม ข. ผิด (ฝั่งขวาของจอ)
-    canvasCtx.fillStyle = btnB_Box.hovered ? "rgba(255, 215, 0, 0.95)" : "rgba(220, 53, 69, 0.85)";
-    roundRect(canvasCtx, btnB_Box.x, btnB_Box.y, btnB_Box.width, btnB_Box.height, 16, true, true);
-    
-    canvasCtx.fillStyle = btnB_Box.hovered ? "#050b14" : "#ffffff";
-    canvasCtx.fillText("ข. ผิด", btnB_Box.x + 37, btnB_Box.y + 53);
-}
-
-function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + width - radius, y);
-    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-    ctx.lineTo(x + width, y + height - radius);
-    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-    ctx.lineTo(x + radius, y + height);
-    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-    ctx.lineTo(x, y + radius);
-    ctx.quadraticCurveTo(x, y, x + radius, y);
-    ctx.closePath();
-    if (fill) ctx.fill();
-    if (stroke) ctx.stroke();
-}
-
-// --- 6. คำนวณขอบเขตการชนปุ่มอิงตามระบบกระจกเงา ---
+// [FIX]: ปรับฟังก์ชันตรวจสอบการชนกันให้ใช้พิกัดแกน X ที่ถูก Flip แล้ว
 function checkCollision(handX, handY) {
-    if (handX >= btnA_Box.x && handX <= btnA_Box.x + btnA_Box.width &&
-        handY >= btnA_Box.y && handY <= btnA_Box.y + btnA_Box.height) {
-        btnA_Box.hovered = true;
+    const rectA = btnA.getBoundingClientRect();
+    const rectB = btnB.getBoundingClientRect();
+    const canvasRect = canvasElement.getBoundingClientRect();
+
+    const scaleFactorX = canvasRect.width / canvasElement.width;
+    const scaleFactorY = canvasRect.height / canvasElement.height;
+
+    // [COMPUTATION FIXED]: คำนวณพิกัดแกน X ใหม่โดยใช้ความกว้าง Canvas ลบค่าพิกัดเดิม เพื่อแก้สมดุลกระจกเงา
+    const fixedHandX = (canvasElement.width - handX);
+    const absoluteHandX = canvasRect.left + (fixedHandX * scaleFactorX);
+    const absoluteHandY = canvasRect.top + (handY * scaleFactorY);
+
+    if (absoluteHandX >= rectA.left && absoluteHandX <= rectA.right &&
+        absoluteHandY >= rectA.top && absoluteHandY <= rectA.bottom) {
+        btnA.classList.add('hovered');
         if (canAnswer) checkAnswer('ก');
     } else {
-        btnA_Box.hovered = false;
+        btnA.classList.remove('hovered');
     }
 
-    if (handX >= btnB_Box.x && handX <= btnB_Box.x + btnB_Box.width &&
-        handY >= btnB_Box.y && handY <= btnB_Box.y + btnB_Box.height) {
-        btnB_Box.hovered = true;
+    if (absoluteHandX >= rectB.left && absoluteHandX <= rectB.right &&
+        absoluteHandY >= rectB.top && absoluteHandY <= rectB.bottom) {
+        btnB.classList.add('hovered');
         if (canAnswer) checkAnswer('ข');
     } else {
-        btnB_Box.hovered = false;
+        btnB.classList.remove('hovered');
     }
 }
 
-// --- 7. ฟังก์ชันประมวลผลวิดีโอ (กลับด้านกระจกเงาทั้งภาพและตัวเลขควบคุม) ---
 function onResults(results) {
     canvasElement.width = 680;
     canvasElement.height = 480;
 
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-    
-    // วาดภาพสดจากวิดีโอแบบส่องกระจกเงา (Mirror Effect ทำให้คนเล่นไม่งงขวา-ซ้าย)
+
+    if (bgImage.complete) {
+        canvasCtx.drawImage(bgImage, 0, 0, canvasElement.width, canvasElement.height);
+    }
+
     canvasCtx.save();
-    canvasCtx.translate(canvasElement.width, 0);
-    canvasCtx.scale(-1, 1);
+    canvasCtx.globalAlpha = 0.55;
     canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
     canvasCtx.restore();
 
-    // วาดปุ่มทับหน้ากล้อง (ก. ถูก อยู่ด้านซ้ายหน้าจอ และ ข. ผิด อยู่ด้านขวาหน้าจอ)
-    drawCanvasButtons();
-
-    // เมื่อ AI ตรวจจับฝ่ามือเจอในระบบ
     if (results.multiHandLandmarks) {
         for (const landmarks of results.multiHandLandmarks) {
-            const targetPoint = landmarks[9]; // ข้อต่อโคนนิ้วกลาง
+            const targetPoint = landmarks[9];
             
-            // [COMPUTATION FIX]: สั่งคว่ำสลับแกน X ของค่าดิบจากโมเดล เพื่อให้ตำแหน่งนิ้วบนจอกับค่าพิกัดชนปุ่มตรงกันในโหมดกระจกเงา
-            const pixelX = (1 - targetPoint.x) * canvasElement.width;
+            const pixelX = targetPoint.x * canvasElement.width;
             const pixelY = targetPoint.y * canvasElement.height;
 
-            // วาดโครงกระดูกนิ้วมือสีทอง และจุดข้อนิ้วสีฟ้านีออนให้ตรงกับตำแหน่งมือในจอ
             drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#dfb76c', lineWidth: 4});
-            drawLandmarks(canvasCtx, landmarks, {color: '#00fff0', lineWidth: 1, radius: 4});
+            drawLandmarks(canvasCtx, landmarks, {color: '#00fff0', lineWidth: 1, radius: 3});
 
-            // ตรวจสอบการชนปุ่มทันที
+            // ส่งพิกัดแนวแกน X ดั้งเดิมเข้าไป เพื่อทำการกลับแกนภายในฟังก์ชัน checkCollision
             checkCollision(pixelX, pixelY);
         }
     }
 }
 
-// --- 8. ติดตั้งโมเดลปัญญาประดิษฐ์ MediaPipe ---
 const hands = new Hands({
-    locateFile: (file) => {
-        return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-    }
+    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
 });
 
 hands.setOptions({
     maxNumHands: 1,
     modelComplexity: 1,
-    minDetectionConfidence: 0.55, 
+    minDetectionConfidence: 0.55,
     minTrackingConfidence: 0.55
 });
 hands.onResults(onResults);
@@ -231,5 +194,5 @@ const camera = new Camera(videoElement, {
 
 loadQuestion();
 camera.start().catch(err => {
-    statusBar.innerText = "🚨 ระบบกล้องขัดข้อง: โปรดกดอนุญาตสิทธิ์ให้เว็บเข้าถึงกล้องเว็บแคม";
+    statusBar.innerText = "🚨 เปิดกล้องไม่ได้! โปรดปิดแอปอื่นที่แย่งกล้องอยู่แล้วรีเฟรชหน้าเว็บ";
 });
