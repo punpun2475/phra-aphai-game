@@ -34,7 +34,7 @@ const btnA = document.getElementById('btn_a');
 const btnB = document.getElementById('btn_b');
 
 const bgImage = new Image();
-bgImage.src = 'https://img1.pic.in.th/images/Copy-of-d921c48a7fa1fa9d.png'; 
+bgImage.src = 'https://img2.pic.in.th/Copy-of--1.png'; 
 
 function speak(text) {
     if ('speechSynthesis' in window) {
